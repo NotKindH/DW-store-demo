@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="DW STORE — a dragon-themed gaming catalog demo.">
+  <title>DW STORE — Enter the Dragon's Den</title>
+  <style>
+    :root {
+      --bg: #090b10; --panel: #11151e; --panel2: #171c27; --line: #2a3040;
+      --gold: #e8bd61; --gold2: #ffe2a0; --text: #f4f5f8; --muted: #a7afbf;
+      --green: #a8e6bd; --red: #ffb4a9; --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0; color: var(--text); background:
+        radial-gradient(ellipse at 85% -10%, rgba(232,189,97,.13), transparent 35%),
+        radial-gradient(ellipse at 0% 35%, rgba(90,105,155,.09), transparent 40%), var(--bg);
+      font: 16px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(1120px, calc(100% - 32px)); margin: auto; }
+    .top-note { text-align: center; padding: 8px 12px; color: #17130b; background: var(--gold); font-size: .78rem; font-weight: 800; letter-spacing: .08em; }
+    header { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(9,11,16,.88); backdrop-filter: blur(16px); }
+    .nav { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 76px; }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark { display: grid; place-items: center; width: 46px; height: 46px; flex: 0 0 auto; border: 1px solid #8e713b; border-radius: 14px; background: linear-gradient(145deg,#2a2418,#101219); font-size: 26px; box-shadow: inset 0 0 18px #e8bd6114; }
+    .brand-name { font-weight: 950; letter-spacing: .11em; font-size: 1.08rem; }
+    .brand-sub { color: var(--muted); font-size: .65rem; letter-spacing: .15em; }
+    .nav-links { display: flex; align-items: center; gap: 22px; color: #c7ccda; font-size: .9rem; }
+    .nav-links a:hover { color: var(--gold2); }
+    .cart-button, .btn { border: 0; border-radius: 12px; padding: 11px 15px; cursor: pointer; font-weight: 800; transition: transform .16s ease, background .16s ease; }
+    .cart-button { color: var(--text); border: 1px solid var(--line); background: var(--panel2); white-space: nowrap; }
+    .cart-button:hover, .btn:hover { transform: translateY(-1px); }
+    .cart-count { color: #17130b; background: var(--gold); border-radius: 100px; padding: 2px 7px; margin-left: 5px; font-size: .76rem; }
+    .hero { padding: 76px 0 50px; display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; }
+    .eyebrow { color: var(--gold); font-size: .76rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; }
+    h1 { font-size: clamp(2.6rem, 6.5vw, 5rem); line-height: .99; letter-spacing: -.055em; margin: 14px 0 20px; }
+    h1 span { color: var(--gold); }
+    .hero p { max-width: 590px; color: var(--muted); font-size: 1.07rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+    .btn-primary { background: linear-gradient(135deg, var(--gold2), var(--gold)); color: #17130b; }
+    .btn-secondary { color: var(--text); border: 1px solid var(--line); background: #121722; }
+    .hero-art { min-height: 340px; position: relative; display: grid; place-items: center; overflow: hidden; border: 1px solid #65512e; border-radius: 28px; background: radial-gradient(circle at 50% 40%, #4a351d 0, #1c1b20 30%, #11141b 67%); }
+    .hero-art::before, .hero-art::after { content: ""; position: absolute; border: 1px solid #e8bd6133; border-radius: 50%; width: 290px; height: 290px; }
+    .hero-art::after { width: 360px; height: 360px; }
+    .dragon { font-size: clamp(7rem, 17vw, 12rem); filter: drop-shadow(0 10px 35px #e8bd6144); z-index: 1; }
+    .art-label { position: absolute; bottom: 20px; left: 22px; z-index: 2; color: var(--gold2); font-size: .72rem; font-weight: 900; letter-spacing: .17em; }
+    .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 4px 0 54px; }
+    .stat { border: 1px solid var(--line); border-radius: 14px; background: #10141c; padding: 16px; }
+    .stat strong { display: block; color: var(--gold2); font-size: 1.18rem; }
+    .stat span { color: var(--muted); font-size: .8rem; }
+    section { scroll-margin-top: 100px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+    h2 { font-size: clamp(1.65rem, 4vw, 2.35rem); letter-spacing: -.035em; margin: 6px 0 0; }
+    .section-head p { color: var(--muted); margin: 0; max-width: 440px; font-size: .92rem; }
+    .shop-tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .search { flex: 1 1 220px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--text); padding: 12px 14px; outline: none; }
+    .search:focus { border-color: var(--gold); }
+    .filter { border: 1px solid var(--line); border-radius: 12px; color: var(--text); background: var(--panel); padding: 12px; }
+    .product-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .product { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: linear-gradient(155deg,#171c27,#10131a 65%); min-width: 0; }
+    .product-visual { min-height: 148px; display: grid; place-items: center; position: relative; background: radial-gradient(circle at 50% 45%, var(--glow, #6d5126) 0, #1b1d25 42%, #11141b 76%); border-bottom: 1px solid var(--line); }
+    .product-emoji { font-size: 4.2rem; filter: drop-shadow(0 8px 12px #0008); }
+    .tag { position: absolute; top: 12px; left: 12px; border: 1px solid #e8bd6144; background: #0b0d12cc; color: var(--gold2); border-radius: 100px; padding: 5px 9px; font-size: .68rem; font-weight: 800; }
+    .product-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+    .product-type { color: var(--gold); font-size: .68rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .product h3 { margin: 5px 0 6px; font-size: 1.12rem; }
+    .product p { color: var(--muted); font-size: .84rem; margin: 0 0 18px; flex: 1; }
+    .product-bottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .price { font-weight: 900; font-size: 1.15rem; color: var(--gold2); }
+    .add-btn { background: #242a37; color: var(--text); border: 1px solid #3b4355; border-radius: 10px; padding: 9px 12px; cursor: pointer; font-weight: 800; }
+    .add-btn:hover { border-color: var(--gold); }
+    .empty { grid-column: 1/-1; text-align: center; color: var(--muted); padding: 40px 12px; border: 1px dashed var(--line); border-radius: var(--radius); }
+    .notice { margin: 22px 0 0; padding: 14px 16px; border: 1px solid #8b713c77; background: #2b2416; color: #f5dfad; border-radius: 13px; font-size: .84rem; }
+    .features { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 70px 0; }
+    .feature { padding: 21px; border: 1px solid var(--line); border-radius: 16px; background: #10141c; }
+    .feature-icon { font-size: 1.5rem; }
+    .feature h3 { margin: 8px 0 5px; }
+    .feature p { color: var(--muted); font-size: .87rem; margin: 0; }
+    footer { border-top: 1px solid var(--line); padding: 26px 0 34px; color: var(--muted); font-size: .82rem; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    .footer-brand { color: var(--text); font-weight: 900; letter-spacing: .12em; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 30; background: #000a; display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(540px,100%); max-height: 85vh; overflow: auto; border: 1px solid var(--line); border-radius: 20px; background: #11151e; padding: 22px; box-shadow: 0 25px 80px #0009; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .modal-head h2 { font-size: 1.5rem; }
+    .close { border: 1px solid var(--line); border-radius: 10px; background: #1b202b; color: var(--text); cursor: pointer; padding: 7px 11px; }
+    .cart-lines { margin: 18px 0; display: grid; gap: 10px; }
+    .cart-line { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+    .cart-line small { display: block; color: var(--muted); }
+    .qty { display: flex; align-items: center; gap: 8px; }
+    .qty button { background: #222938; color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 3px 9px; cursor: pointer; }
+    .cart-total { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 15px; font-weight: 900; }
+    .demo-checkout { width: 100%; margin-top: 16px; }
+    .fine-print { color: var(--muted); font-size: .78rem; }
+    .toast { position: fixed; bottom: 18px; left: 50%; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 50; background: #e8bd61; color: #17130b; padding: 11px 16px; border-radius: 12px; font-weight: 800; box-shadow: 0 10px 30px #0007; transition: .2s ease; max-width: calc(100% - 24px); text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    @media (max-width: 780px) {
+      .hero { grid-template-columns: 1fr; padding-top: 48px; gap: 26px; }
+      .hero-art { min-height: 260px; }
+      .product-grid { grid-template-columns: repeat(2,1fr); }
+      .features { grid-template-columns: 1fr; margin: 50px 0; }
+      .nav-links { display: none; }
+      .section-head { align-items: start; flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+      .wrap { width: min(100% - 22px, 1120px); }
+      .nav { min-height: 66px; }
+      .brand-mark { width: 40px; height: 40px; }
+      .brand-name { font-size: .95rem; }
+      .brand-sub { font-size: .58rem; }
+      .cart-button { padding: 9px 10px; font-size: .83rem; }
+      .hero { padding-top: 38px; }
+      h1 { font-size: clamp(2.55rem, 13vw, 3.8rem); }
+      .stats { gap: 7px; }
+      .stat { padding: 12px 9px; }
+      .stat strong { font-size: 1rem; }
+      .stat span { font-size: .7rem; }
+      .product-grid { grid-template-columns: 1fr; }
+      .product { display: grid; grid-template-columns: 112px 1fr; }
+      .product-visual { min-height: 100%; border-bottom: 0; border-right: 1px solid var(--line); }
+      .product-emoji { font-size: 3rem; }
+      .product-body { padding: 13px; }
+      .product p { margin-bottom: 12px; }
+      .product-bottom { align-items: start; flex-direction: column; }
+      .add-btn { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="top-note">DEMO STOREFRONT • NO REAL SALES OR PAYMENTS</div>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="#home" aria-label="DW Store home">
+        <div class="brand-mark" aria-hidden="true">🐉</div>
+        <div><div class="brand-name">DW STORE</div><div class="brand-sub">ENTER THE DRAGON'S DEN</div></div>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#home">Home</a><a href="#shop">Catalog</a><a href="#about">About</a>
+      </nav>
+      <button class="cart-button" id="open-cart" aria-label="Open demo cart">🛒 Cart <span class="cart-count" id="cart-count">0</span></button>
+    </div>
+  </header>
+
+  <main>
+    <section class="wrap hero" id="home">
+      <div>
+        <div class="eyebrow">A gaming shop concept</div>
+        <h1>ENTER THE<br><span>DRAGON'S</span><br>DEN.</h1>
+        <p>A bold, dragon-themed home for the DW gaming community. Browse our sample catalog and test the shopping experience — this version is a demo, not a live store.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#shop">Explore catalog ↗</a>
+          <a class="btn btn-secondary" href="#about">About DW STORE</a>
+        </div>
+      </div>
+      <div class="hero-art" aria-label="Decorative dragon artwork">
+        <div class="dragon" aria-hidden="true">🐉</div>
+        <div class="art-label">BUILT FOR THE CREW • DW</div>
+      </div>
+    </section>
+
+    <div class="wrap stats" aria-label="Store highlights">
+      <div class="stat"><strong>Demo</strong><span>Sample products only</span></div>
+      <div class="stat"><strong>Mobile-first</strong><span>Phone and desktop ready</span></div>
+      <div class="stat"><strong>₹0 start</strong><span>Free static hosting options</span></div>
+    </div>
+
+    <section class="wrap" id="shop">
+      <div class="section-head">
+        <div><div class="eyebrow">The catalog</div><h2>Explore the collection</h2></div>
+        <p>Search and filter the sample products. Prices are illustrative demo values and do not represent offers for sale.</p>
+      </div>
+      <div class="shop-tools">
+        <input class="search" id="search" type="search" placeholder="Search demo products…" aria-label="Search demo products">
+        <select class="filter" id="category" aria-label="Filter by category">
+          <option value="all">All categories</option><option value="fruit">Fruits</option><option value="gamepass">Gamepasses</option><option value="guide">Guides</option>
+        </select>
+        <select class="filter" id="sort" aria-label="Sort products">
+          <option value="featured">Featured</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="az">Name: A–Z</option>
+        </select>
+      </div>
+      <div class="product-grid" id="product-grid" aria-live="polite"></div>
+      <div class="notice"><strong>Demo notice:</strong> This catalog is for layout and interaction testing only. It does not offer real Blox Fruits items, process payments, or place real orders. Check applicable platform rules before selling any game-related products.</div>
+    </section>
+
+    <section class="wrap features" id="about">
+      <article class="feature"><div class="feature-icon">🐲</div><h3>Dragon-inspired design</h3><p>Dark panels, gold accents and a bold identity for the DW community.</p></article>
+      <article class="feature"><div class="feature-icon">📱</div><h3>Works on mobile</h3><p>Responsive layouts for iPhone, Android, tablets and desktop screens.</p></article>
+      <article class="feature"><div class="feature-icon">🔒</div><h3>Demo-safe checkout</h3><p>The cart is interactive, but checkout only shows a demo message. No personal data or payment details are collected.</p></article>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div><div class="footer-brand">DW STORE 🐉</div><div>Enter the Dragon's Den.</div></div>
+      <div>Unofficial fan-made concept. Not affiliated with Roblox or Blox Fruits.<br>© <span id="year"></span> DW STORE • Demo only</div>
+    </div>
+  </footer>
+
+  <div class="modal-backdrop" id="cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="modal">
+      <div class="modal-head"><h2 id="cart-title">Your demo cart</h2><button class="close" id="close-cart" aria-label="Close cart">✕</button></div>
+      <div class="cart-lines" id="cart-lines"></div>
+      <div class="cart-total"><span>Demo total</span><span id="cart-total">₹0</span></div>
+      <button class="btn btn-primary demo-checkout" id="demo-checkout">Test demo checkout</button>
+      <p class="fine-print">No order will be placed. No payment is collected. Do not enter personal or payment details.</p>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Demo data only. Do not treat these as real product offers.
+    const products = [
+      { id: "sample-dragon", name: "Dragon Fruit (Sample)", category: "fruit", type: "Sample fruit", price: 499, emoji: "🐉", glow: "#78522d", description: "Illustrative catalog card for testing product layouts." },
+      { id: "sample-buddha", name: "Buddha Fruit (Sample)", category: "fruit", type: "Sample fruit", price: 199, emoji: "🟡", glow: "#8a702a", description: "A placeholder product used to test search and cart." },
+      { id: "sample-portal", name: "Portal Fruit (Sample)", category: "fruit", type: "Sample fruit", price: 249, emoji: "🌀", glow: "#3e557f", description: "Sample description only; not an offer to sell an in-game item." },
+      { id: "sample-pass", name: "Gamepass (Sample)", category: "gamepass", type: "Sample gamepass", price: 699, emoji: "🎟️", glow: "#75542b", description: "Placeholder card for testing a future product category." },
+      { id: "sample-guide", name: "Beginner's Guide (Sample)", category: "guide", type: "Digital guide concept", price: 49, emoji: "📘", glow: "#315e52", description: "A sample guide card; no file is included or sold in this demo." },
+      { id: "sample-kit", name: "Trading Tips Pack (Sample)", category: "guide", type: "Digital guide concept", price: 79, emoji: "⚔️", glow: "#6b3b3b", description: "Placeholder content to test a mixed catalog." }
+    ];
+    const cart = new Map();
+    const grid = document.getElementById("product-grid");
+    const search = document.getElementById("search");
+    const category = document.getElementById("category");
+    const sort = document.getElementById("sort");
+    const modal = document.getElementById("cart-modal");
+    const toast = document.getElementById("toast");
+    let toastTimer;
+
+    const money = amount => "₹" + amount.toLocaleString("en-IN");
+    const categoryLabel = key => ({ fruit: "Sample fruit", gamepass: "Sample gamepass", guide: "Guide concept" })[key] || "Demo";
+
+    function renderProducts() {
+      const term = search.value.trim().toLowerCase();
+      let list = products.filter(p => (category.value === "all" || p.category === category.value) &&
+        (p.name.toLowerCase().includes(term) || p.description.toLowerCase().includes(term)));
+      if (sort.value === "low") list.sort((a,b) => a.price-b.price);
+      if (sort.value === "high") list.sort((a,b) => b.price-a.price);
+      if (sort.value === "az") list.sort((a,b) => a.name.localeCompare(b.name));
+      if (!list.length) {
+        grid.innerHTML = '<div class="empty">No sample products found. Try a different search.</div>';
+        return;
+      }
+      grid.innerHTML = list.map(p => `
+        <article class="product">
+          <div class="product-visual" style="--glow:${p.glow}">
+            <span class="tag">${categoryLabel(p.category)}</span>
+            <span class="product-emoji" aria-hidden="true">${p.emoji}</span>
+          </div>
+          <div class="product-body">
+            <div class="product-type">${p.type}</div>
+            <h3>${p.name}</h3>
+            <p>${p.description}</p>
+            <div class="product-bottom">
+              <span class="price">${money(p.price)}</span>
+              <button class="add-btn" data-add="${p.id}">Add to demo cart +</button>
+            </div>
+          </div>
+        </article>`).join("");
+    }
+
+    function cartCount() { let n = 0; cart.forEach(q => n += q); return n; }
+    function cartTotal() {
+      let total = 0; cart.forEach((q,id) => { const p = products.find(x => x.id === id); if (p) total += p.price*q; }); return total;
+    }
+    function renderCart() {
+      document.getElementById("cart-count").textContent = cartCount();
+      const lines = document.getElementById("cart-lines");
+      if (!cart.size) {
+        lines.innerHTML = '<div class="empty">Your demo cart is empty. Add a sample product to test it.</div>';
+      } else {
+        lines.innerHTML = [...cart.entries()].map(([id,q]) => {
+          const p = products.find(x => x.id === id);
+          return `<div class="cart-line"><div><strong>${p.name}</strong><small>${money(p.price)} each</small></div><div class="qty"><button data-qty="${id}" data-delta="-1" aria-label="Remove one ${p.name}">−</button><span>${q}</span><button data-qty="${id}" data-delta="1" aria-label="Add one ${p.name}">+</button></div></div>`;
+        }).join("");
+      }
+      document.getElementById("cart-total").textContent = money(cartTotal());
+    }
+    function showToast(message) {
+      toast.textContent = message; toast.classList.add("show");
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+    function openCart() { renderCart(); modal.classList.add("open"); document.getElementById("close-cart").focus(); }
+    function closeCart() { modal.classList.remove("open"); document.getElementById("open-cart").focus(); }
+
+    grid.addEventListener("click", e => {
+      const button = e.target.closest("[data-add]");
+      if (!button) return;
+      const id = button.dataset.add; cart.set(id, (cart.get(id) || 0) + 1);
+      renderCart(); showToast("Sample product added to demo cart.");
+    });
+    document.getElementById("cart-lines").addEventListener("click", e => {
+      const button = e.target.closest("[data-qty]");
+      if (!button) return;
+      const id = button.dataset.qty; const next = (cart.get(id) || 0) + Number(button.dataset.delta);
+      if (next <= 0) cart.delete(id); else cart.set(id, next);
+      renderCart();
+    });
+    [search, category, sort].forEach(el => el.addEventListener(el === search ? "input" : "change", renderProducts));
+    document.getElementById("open-cart").addEventListener("click", openCart);
+    document.getElementById("close-cart").addEventListener("click", closeCart);
+    modal.addEventListener("click", e => { if (e.target === modal) closeCart(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && modal.classList.contains("open")) closeCart(); });
+    document.getElementById("demo-checkout").addEventListener("click", () => {
+      closeCart(); showToast("Demo only — no order or payment was created.");
+    });
+    document.getElementById("year").textContent = new Date().getFullYear();
+    renderProducts(); renderCart();
+  </script>
+</body>
+</html>
