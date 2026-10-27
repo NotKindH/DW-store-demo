@@ -132,6 +132,15 @@
       .add-btn { width: 100%; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+
+    .account-button{border:1px solid #8e713b;border-radius:12px;padding:10px 13px;color:#17130b;background:linear-gradient(135deg,var(--gold2),var(--gold));font-weight:900;cursor:pointer;white-space:nowrap}
+    .account-button.logged-in{color:var(--text);background:var(--panel2);border-color:var(--line)}
+    .account-form{display:grid;gap:12px;margin-top:16px}.account-form label{display:grid;gap:6px;color:var(--muted);font-size:.86rem}
+    .account-form input{width:100%;border:1px solid var(--line);border-radius:10px;background:#090b10;color:var(--text);padding:11px 12px}
+    .account-form input:focus{outline:1px solid var(--gold);border-color:var(--gold)}.account-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+    .account-message{border-radius:10px;padding:10px 12px;background:#171c27;color:var(--muted);font-size:.86rem}.account-message.error{color:#ffb4a9;border:1px solid #7d3838}.account-message.success{color:#a8e6bd;border:1px solid #315f45}
+    .profile-summary{padding:12px;border:1px solid var(--line);border-radius:12px;margin-top:12px}
+
   </style>
 </head>
 <body>
@@ -145,7 +154,7 @@
       <nav class="nav-links" aria-label="Main navigation">
         <a href="#home">Home</a><a href="#shop">Catalog</a><a href="#about">About</a>
       </nav>
-      <button class="cart-button" id="open-cart" aria-label="Open demo cart">🛒 Cart <span class="cart-count" id="cart-count">0</span></button>
+      <div style="display:flex;align-items:center;gap:9px"><button class="account-button" id="account-open">Sign in</button><button class="cart-button" id="open-cart" aria-label="Open demo cart">🛒 Cart <span class="cart-count" id="cart-count">0</span></button></div>
     </div>
   </header>
 
@@ -213,6 +222,20 @@
       <p class="fine-print">No order will be placed. No payment is collected. Do not enter personal or payment details.</p>
     </div>
   </div>
+
+  <div class="modal-backdrop" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-title"><div class="modal">
+    <div class="modal-head"><h2 id="account-title">Create your DW STORE account</h2><button class="close" id="account-close" aria-label="Close account">✕</button></div>
+    <p class="fine-print">Use an email address you control. Never share your password with anyone.</p><div id="account-message" class="account-message" role="status">Create an account or sign in.</div>
+    <div id="account-forms"><form class="account-form" id="signup-form">
+      <label>Email address<input id="signup-email" type="email" autocomplete="email" required maxlength="254"></label><label>Password (at least 8 characters)<input id="signup-password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Display name<input id="signup-name" type="text" autocomplete="nickname" maxlength="60" required></label><label>Roblox username<input id="signup-roblox" type="text" maxlength="40" required></label><button class="btn btn-primary" type="submit">Create account</button></form>
+      <div class="account-actions"><button class="btn btn-secondary" id="show-login" type="button">Already registered? Sign in</button></div>
+      <form class="account-form" id="login-form" hidden><label>Email address<input id="login-email" type="email" autocomplete="email" required maxlength="254"></label><label>Password<input id="login-password" type="password" autocomplete="current-password" required></label><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div class="account-actions"><button class="btn btn-secondary" id="show-signup" type="button" hidden>Create a new account</button></div></div>
+    <div id="account-profile" hidden><div class="profile-summary"><strong id="profile-email"></strong><p class="fine-print">Your customer profile</p></div>
+      <form class="account-form" id="profile-form"><label>Display name<input id="profile-name" type="text" maxlength="60" required></label><label>Roblox username<input id="profile-roblox" type="text" maxlength="40" required></label><button class="btn btn-primary" type="submit">Save profile</button></form>
+      <div class="account-actions"><button class="btn btn-secondary" id="account-logout" type="button">Sign out</button></div><p class="fine-print">Order history will be added after the order system is connected.</p></div>
+  </div></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -364,6 +387,28 @@
     });
     document.getElementById("year").textContent = new Date().getFullYear();
     renderProducts(); renderCart(); loadProducts();
-  </script>
+  
+    // Supabase customer authentication and private profile access. Use only the public publishable key.
+    const accountModal=document.getElementById("account-modal"), accountOpen=document.getElementById("account-open"), accountMessage=document.getElementById("account-message");
+    const accountForms=document.getElementById("account-forms"), accountProfile=document.getElementById("account-profile"), signupForm=document.getElementById("signup-form"), loginForm=document.getElementById("login-form"), showLogin=document.getElementById("show-login"), showSignup=document.getElementById("show-signup"), profileForm=document.getElementById("profile-form");
+    const sessionKey="dw_store_customer_session_v1"; let customerSession=null; try{customerSession=JSON.parse(localStorage.getItem(sessionKey)||"null")}catch(e){}
+    function accountMsg(msg,type=""){accountMessage.textContent=msg;accountMessage.className="account-message"+(type?" "+type:"")}
+    function accountMode(mode){const signed=mode==="profile";accountForms.hidden=signed;accountProfile.hidden=!signed;signupForm.hidden=mode!=="signup";showLogin.hidden=mode!=="signup";loginForm.hidden=mode!=="login";showSignup.hidden=mode!=="login";document.getElementById("account-title").textContent=signed?"My DW STORE Profile":mode==="login"?"Sign in to DW STORE":"Create your account"}
+    function headers(token){return {apikey:SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})}}
+    async function authPost(path,body){const r=await fetch(SUPABASE_URL.replace(/\/+$/,"")+path,{method:"POST",headers:headers(),body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.msg||d.message||d.error_description||d.error||"Request failed. Please try again.");return d}
+    async function saveProfileRow(row){const r=await fetch(SUPABASE_URL.replace(/\/+$/,"")+"/rest/v1/profiles?on_conflict=id",{method:"POST",headers:{...headers(customerSession.access_token),Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify(row)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||d.details||"Could not save profile. Check the profiles table and RLS policies.");return d}
+    async function loadProfile(){try{const r=await fetch(SUPABASE_URL.replace(/\/+$/,"")+"/rest/v1/profiles?select=display_name,roblox_username&id=eq."+encodeURIComponent(customerSession.user.id),{headers:headers(customerSession.access_token)});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.message||"Could not load profile; check Supabase RLS policies.");const p=Array.isArray(d)?d[0]:null;document.getElementById("profile-email").textContent=customerSession.user.email||"Signed-in customer";document.getElementById("profile-name").value=p?.display_name||customerSession.user.user_metadata?.display_name||"";document.getElementById("profile-roblox").value=p?.roblox_username||customerSession.user.user_metadata?.roblox_username||"";accountOpen.textContent="My account";accountOpen.classList.add("logged-in");accountMode("profile");accountMsg("You're signed in.","success")}catch(e){accountMsg(e.message,"error")}}
+    function storeSession(d){if(!d.access_token||!d.user)throw Error("Check your email for confirmation, then sign in.");customerSession=d;localStorage.setItem(sessionKey,JSON.stringify(d))}
+    signupForm.addEventListener("submit",async e=>{e.preventDefault();const b=signupForm.querySelector('button[type="submit"]');b.disabled=true;try{const email=document.getElementById("signup-email").value.trim(),password=document.getElementById("signup-password").value,display_name=document.getElementById("signup-name").value.trim(),roblox_username=document.getElementById("signup-roblox").value.trim();const d=await authPost("/auth/v1/signup",{email,password,data:{display_name,roblox_username}});if(!d.access_token||!d.user){accountMode("login");document.getElementById("login-email").value=email;accountMsg("Account created/requested. Check your email for the confirmation link, then sign in.","success");return}storeSession(d);await saveProfileRow({id:d.user.id,display_name,roblox_username});await loadProfile()}catch(err){accountMsg(err.message,"error")}finally{b.disabled=false}});
+    loginForm.addEventListener("submit",async e=>{e.preventDefault();const b=loginForm.querySelector('button[type="submit"]');b.disabled=true;try{const d=await authPost("/auth/v1/token?grant_type=password",{email:document.getElementById("login-email").value.trim(),password:document.getElementById("login-password").value});storeSession(d);await loadProfile()}catch(err){accountMsg(err.message,"error")}finally{b.disabled=false}});
+    profileForm.addEventListener("submit",async e=>{e.preventDefault();const b=profileForm.querySelector('button[type="submit"]');b.disabled=true;try{await saveProfileRow({id:customerSession.user.id,display_name:document.getElementById("profile-name").value.trim(),roblox_username:document.getElementById("profile-roblox").value.trim(),updated_at:new Date().toISOString()});accountMsg("Profile saved successfully.","success")}catch(err){accountMsg(err.message,"error")}finally{b.disabled=false}});
+    document.getElementById("account-logout").addEventListener("click",async()=>{try{await fetch(SUPABASE_URL.replace(/\/+$/,"")+"/auth/v1/logout",{method:"POST",headers:headers(customerSession?.access_token)})}catch(e){}customerSession=null;localStorage.removeItem(sessionKey);accountOpen.textContent="Sign in";accountOpen.classList.remove("logged-in");accountMode("signup");accountMsg("You have signed out.","success")});
+    accountOpen.addEventListener("click",()=>{accountModal.classList.add("open");if(customerSession?.access_token&&customerSession?.user)loadProfile();else{accountMode("signup");accountMsg("Create an account or sign in.")}});
+    document.getElementById("account-close").addEventListener("click",()=>accountModal.classList.remove("open"));accountModal.addEventListener("click",e=>{if(e.target===accountModal)accountModal.classList.remove("open")});
+    showLogin.addEventListener("click",()=>{accountMode("login");accountMsg("Enter your email and password.")});showSignup.addEventListener("click",()=>{accountMode("signup");accountMsg("Create your customer account.")});
+    if(customerSession?.access_token&&customerSession?.user){accountOpen.textContent="My account";accountOpen.classList.add("logged-in");}
+
+    if(customerSession?.access_token&&customerSession?.user){loadProfile()}
+</script>
 </body>
 </html>
