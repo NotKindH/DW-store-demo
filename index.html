@@ -426,6 +426,17 @@
     const checkoutModal=document.getElementById("checkout-modal"), checkoutMessage=document.getElementById("checkout-message");
     let activeCheckoutOrderId=null, activeCheckoutTotal=0;
     function checkoutMsg(message){checkoutMessage.textContent=message}
+    function showCheckoutLoginPrompt(){
+      customerSession=null;
+      localStorage.removeItem(sessionKey);
+      accountOpen.textContent="Sign in";
+      accountOpen.classList.remove("logged-in");
+      accountModal.classList.add("open");
+      accountMode("login");
+      accountMsg("Please Login/Sign Up to place an order.");
+      checkoutMsg("Please Login/Sign Up to place an order.");
+    }
+    function isAuthError(error){return /jwt expired|invalid jwt|token.{0,20}expired|unauthorized/i.test(String(error?.message||error||""))}
     function startCheckout(){
       if(!cart.size){showToast("Your cart is empty.");return}
       if(!customerSession?.access_token||!customerSession?.user){
@@ -456,7 +467,7 @@
     }
     document.getElementById("checkout-order-form").addEventListener("submit",async e=>{
       e.preventDefault();
-      if(!customerSession?.access_token||!customerSession?.user){checkoutMsg("Your session has expired. Please sign in again.");return}
+      if(!customerSession?.access_token||!customerSession?.user){showCheckoutLoginPrompt();return}
       const button=document.getElementById("create-order-button");button.disabled=true;
       try{
         const roblox=document.getElementById("checkout-roblox").value.trim();
@@ -480,7 +491,7 @@
         document.getElementById("checkout-order-form").hidden=true;
         document.getElementById("checkout-payment").hidden=false;
         checkoutMsg("Order created. Pay the exact total using the QR, then submit your transaction reference.");
-      }catch(error){checkoutMsg(error.message||"Could not create the order. Please try again.")}
+      }catch(error){if(isAuthError(error)){showCheckoutLoginPrompt()}else{checkoutMsg(error.message||"Could not create the order. Please try again.")}}
       finally{button.disabled=false}
     });
     document.getElementById("payment-reference-form").addEventListener("submit",async e=>{
@@ -494,7 +505,7 @@
         checkoutMsg("Payment reference submitted. Your order is awaiting manual payment verification by the store administrator.");
         button.textContent="Reference submitted";button.disabled=true;
         cart.clear();renderCart();
-      }catch(error){checkoutMsg(error.message||"Could not submit the reference. Please try again.");button.disabled=false}
+      }catch(error){if(isAuthError(error)){showCheckoutLoginPrompt()}else{checkoutMsg(error.message||"Could not submit the reference. Please try again.")}button.disabled=false}
     });
     document.getElementById("checkout-close").addEventListener("click",()=>checkoutModal.classList.remove("open"));
     checkoutModal.addEventListener("click",e=>{if(e.target===checkoutModal)checkoutModal.classList.remove("open")});
