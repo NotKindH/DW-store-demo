@@ -1,15 +1,252 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DW STORE — Admin</title>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DW STORE — Admin</title>
 <style>
-:root{color-scheme:dark;--bg:#090b10;--panel:#121722;--line:#273144;--gold:#f5c65d;--muted:#aab3c3;--red:#ff7474;--green:#8ce3b0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#182033 0,#090b10 50%);color:#f5f7fb;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1050px;margin:0 auto;padding:28px 16px 60px}.brand{color:var(--gold);font-weight:900;letter-spacing:.12em;font-size:13px}.hero{margin:10px 0 22px}h1{font-size:clamp(28px,5vw,42px);margin:4px 0}p{color:var(--muted)}.panel{background:rgba(18,23,34,.96);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}input,select,textarea{width:100%;background:#090e17;border:1px solid #354157;border-radius:9px;color:#fff;padding:11px;font:inherit}textarea{min-height:76px;resize:vertical}button{border:0;border-radius:9px;padding:11px 15px;background:var(--gold);color:#17130a;font-weight:800;cursor:pointer}button.secondary{background:#263247;color:#fff;border:1px solid #3b4960}button.danger{background:#49252b;color:#ffd7d7;border:1px solid #7d3d46}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.hidden{display:none!important}.status{white-space:pre-wrap;color:var(--muted);font-size:14px}.status.good{color:var(--green)}.status.bad{color:var(--red)}.product{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid var(--line);padding:13px 0}.product:first-child{border-top:0}.product small{color:var(--muted)}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:3px 8px;color:var(--muted)}@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.product{grid-template-columns:1fr}.panel{padding:14px}}
-</style></head><body><main>
-<div class="brand">🐉 DW STORE</div><div class="hero"><h1>Admin dashboard</h1><p>Manage demo catalog products, prices, and stock. Real payments and orders are not enabled.</p></div>
-<section id="setup" class="panel"><h2>Connect this page to Supabase</h2><p>Enter your Supabase Project URL and Publishable key. These are saved only in this browser on this device. Never enter a secret or service_role key here.</p><div class="grid"><div class="full"><label for="projectUrl">Project URL</label><input id="projectUrl" placeholder="https://your-project.supabase.co" autocomplete="url"></div><div class="full"><label for="publishableKey">Publishable key</label><input id="publishableKey" placeholder="sb_publishable_..." autocomplete="off"></div></div><div class="row" style="margin-top:14px"><button id="saveConfig">Save connection on this device</button><span class="status" id="configStatus"></span></div></section>
-<section id="loginPanel" class="panel hidden"><h2>Admin login</h2><p>Sign in with the email and password for the Supabase user you created.</p><div class="grid"><div><label for="email">Email</label><input id="email" type="email" autocomplete="username"></div><div><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div></div><div class="row" style="margin-top:14px"><button id="loginBtn">Sign in</button><span id="loginStatus" class="status"></span></div></section>
-<section id="appPanel" class="hidden"><div class="panel"><div class="row"><div><h2 style="margin:0">Product inventory</h2><p style="margin:4px 0">Only the authorized admin can make changes.</p></div><div class="actions"><button id="refreshBtn" class="secondary">Refresh</button><button id="logoutBtn" class="secondary">Sign out</button></div></div><div id="appStatus" class="status" style="margin-top:10px"></div></div>
-<section class="panel"><h2 id="formTitle">Add a product</h2><form id="productForm"><input id="productId" type="hidden"><div class="grid"><div><label for="name">Product name *</label><input id="name" required maxlength="120"></div><div><label for="category">Category *</label><input id="category" value="Fruit" required maxlength="60"></div><div><label for="price">Price (INR) *</label><input id="price" type="number" min="0" step="0.01" required></div><div><label for="stock">Stock quantity *</label><input id="stock" type="number" min="0" step="1" required></div><div class="full"><label for="description">Description</label><textarea id="description" maxlength="1000"></textarea></div><div class="full"><label for="imageUrl">Image URL (optional)</label><input id="imageUrl" type="url" placeholder="https://..."></div><div><label for="active">Visibility</label><select id="active"><option value="true">Active — visible in catalog</option><option value="false">Inactive — hidden</option></select></div></div><div class="row" style="margin-top:14px"><div class="actions"><button type="submit" id="saveProduct">Save product</button><button type="button" id="cancelEdit" class="secondary hidden">Cancel edit</button></div><span id="formStatus" class="status"></span></div></form></section>
-<section class="panel"><div class="row"><h2 style="margin:0">Current products</h2><span id="count" class="pill">0 products</span></div><div id="productsList" style="margin-top:12px"><p>No products loaded yet.</p></div></section></section>
-<p style="font-size:12px;text-align:center">DW STORE demo admin • No payment collection • Not affiliated with Roblox or Blox Fruits.</p></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-(()=>{const $=id=>document.getElementById(id);let client=null,products=[];const cfgKey='dw_store_supabase_config_v1';function status(id,msg,kind=''){const el=$(id);el.textContent=msg;el.className='status '+kind}function show(id,yes=true){$(id).classList.toggle('hidden',!yes)}function getConfig(){try{return JSON.parse(localStorage.getItem(cfgKey)||'null')}catch{return null}}function validUrl(v){try{const u=new URL(v);return u.protocol==='https:'&&u.hostname.endsWith('.supabase.co')}catch{return false}}function initClient(url,key){if(!window.supabase?.createClient)throw new Error('Could not load Supabase client. Check internet and reload.');client=window.supabase.createClient(url,key)}function configure(){const c=getConfig();if(c?.url&&c?.key){$('projectUrl').value=c.url;$('publishableKey').value=c.key;try{initClient(c.url,c.key);show('loginPanel',true);status('configStatus','Connection details loaded on this device.','good');checkSession()}catch(e){status('configStatus',e.message,'bad')}}else{show('loginPanel',false);show('appPanel',false)}}$('saveConfig').addEventListener('click',()=>{const url=$('projectUrl').value.trim(),key=$('publishableKey').value.trim();if(!validUrl(url)||!key||key.startsWith('sb_secret_')||key.includes('service_role')){status('configStatus','Enter a valid HTTPS Supabase Project URL and publishable/anon key. Never use a secret/service_role key.','bad');return}localStorage.setItem(cfgKey,JSON.stringify({url,key}));try{initClient(url,key);show('loginPanel',true);show('appPanel',false);status('configStatus','Saved in this browser. Sign in below.','good')}catch(e){status('configStatus',e.message,'bad')}});async function checkSession(){if(!client)return;const{data,error}=await client.auth.getSession();if(error)status('loginStatus',error.message,'bad');if(data.session){show('appPanel',true);show('loginPanel',false);await loadProducts()}}$('loginBtn').addEventListener('click',async()=>{if(!client){status('loginStatus','Save the Supabase connection details first.','bad');return}status('loginStatus','Signing in…');const{error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){status('loginStatus',error.message,'bad');return}$('password').value='';show('loginPanel',false);show('appPanel',true);status('loginStatus','Signed in.','good');await loadProducts()});$('logoutBtn').addEventListener('click',async()=>{if(client)await client.auth.signOut();show('appPanel',false);show('loginPanel',true);status('loginStatus','Signed out.')});$('refreshBtn').addEventListener('click',loadProducts);async function loadProducts(){if(!client)return;status('appStatus','Loading products…');const{data,error}=await client.from('products').select('*').order('created_at',{ascending:false});if(error){status('appStatus','Could not load products: '+error.message,'bad');return}products=data||[];renderProducts();status('appStatus','Inventory loaded.','good')}function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function renderProducts(){$('count').textContent=products.length+' product'+(products.length===1?'':'s');if(!products.length){$('productsList').innerHTML='<p>No products yet. Add your first product above.</p>';return}$('productsList').innerHTML=products.map(p=>`<div class="product"><div><strong>${esc(p.name)}</strong> <span class="pill">${esc(p.category)}</span> <span class="pill">${p.active?'Active':'Inactive'}</span><br><small>Price: INR ${Number(p.price).toFixed(2)} · Stock: ${Number(p.stock)}${p.description?' · '+esc(p.description):''}</small></div><div class="actions"><button class="secondary" data-edit="${esc(p.id)}">Edit</button><button class="danger" data-delete="${esc(p.id)}">Delete</button></div></div>`).join('');$('productsList').querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>editProduct(b.dataset.edit)));$('productsList').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>deleteProduct(b.dataset.delete)))}function editProduct(id){const p=products.find(x=>x.id===id);if(!p)return;$('productId').value=p.id;$('name').value=p.name||'';$('category').value=p.category||'Fruit';$('price').value=p.price;$('stock').value=p.stock;$('description').value=p.description||'';$('imageUrl').value=p.image_url||'';$('active').value=String(!!p.active);$('formTitle').textContent='Edit product';$('saveProduct').textContent='Update product';show('cancelEdit',true);$('productForm').scrollIntoView({behavior:'smooth',block:'start'})}function resetForm(){$('productForm').reset();$('productId').value='';$('category').value='Fruit';$('active').value='true';$('formTitle').textContent='Add a product';$('saveProduct').textContent='Save product';show('cancelEdit',false);status('formStatus','')}$('cancelEdit').addEventListener('click',resetForm);$('productForm').addEventListener('submit',async e=>{e.preventDefault();if(!client)return;const id=$('productId').value;const payload={name:$('name').value.trim(),category:$('category').value.trim(),price:Number($('price').value),stock:Number($('stock').value),description:$('description').value.trim(),image_url:$('imageUrl').value.trim(),active:$('active').value==='true'};if(!payload.name||!payload.category||!Number.isFinite(payload.price)||payload.price<0||!Number.isInteger(payload.stock)||payload.stock<0){status('formStatus','Check product name, category, price, and whole-number stock.','bad');return}status('formStatus','Saving…');const result=id?await client.from('products').update(payload).eq('id',id):await client.from('products').insert(payload);if(result.error){status('formStatus','Save failed: '+result.error.message,'bad');return}status('formStatus',id?'Product updated.':'Product added.','good');resetForm();await loadProducts()});async function deleteProduct(id){const p=products.find(x=>x.id===id);if(!p||!confirm(`Delete "${p.name}"? This cannot be undone.`))return;status('appStatus','Deleting product…');const{error}=await client.from('products').delete().eq('id',id);if(error){status('appStatus','Delete failed: '+error.message,'bad');return}status('appStatus','Product deleted.','good');await loadProducts()}configure()})();
+:root{color-scheme:dark;--bg:#090b10;--panel:#121722;--line:#273144;--gold:#f5c65d;--muted:#aab3c3;--red:#ff7474;--green:#8ce3b0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#182033 0,#090b10 50%);color:#f5f7fb;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 60px}.brand{color:var(--gold);font-weight:900;letter-spacing:.12em;font-size:13px}.hero{margin:10px 0 22px}
+h1{font-size:clamp(28px,5vw,42px);margin:4px 0}h2{margin-top:0}p{color:var(--muted)}
+.panel{background:rgba(18,23,34,.96);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.full{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+input,select,textarea{width:100%;background:#090e17;border:1px solid #354157;border-radius:9px;color:#fff;padding:11px;font:inherit}
+textarea{min-height:76px;resize:vertical}button{border:0;border-radius:9px;padding:11px 15px;background:var(--gold);color:#17130a;font-weight:800;cursor:pointer}
+button.secondary{background:#263247;color:#fff;border:1px solid #3b4960}button.danger{background:#49252b;color:#ffd7d7;border:1px solid #7d3d46}
+button:disabled{opacity:.55;cursor:not-allowed}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hidden{display:none!important}.status{white-space:pre-wrap;color:var(--muted);font-size:14px}.status.good{color:var(--green)}.status.bad{color:var(--red)}
+.product{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid var(--line);padding:13px 0}.product:first-child{border-top:0}.product small{color:var(--muted)}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:3px 8px;color:var(--muted)}
+.order{border-top:1px solid var(--line);padding:16px 0}.order:first-child{border-top:0}.order-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.order-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.detail{background:#0b111b;border:1px solid #263247;border-radius:10px;padding:10px;min-width:0}.detail small{display:block;color:var(--muted);font-size:12px}.detail strong{overflow-wrap:anywhere}
+.item-list{margin:8px 0 0;padding-left:20px;color:#e6eaf1}.order-controls{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:12px}.order-controls label{min-width:190px;flex:1}
+.status-awaiting_payment{color:#f5c65d}.status-payment_submitted{color:#8ecbff}.status-paid{color:var(--green)}.status-fulfilled{color:#b7a1ff}.status-cancelled{color:#ff9999}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.product{grid-template-columns:1fr}.panel{padding:14px}.order-details{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="brand">🐉 DW STORE</div>
+<div class="hero"><h1>Admin dashboard</h1><p>Manage products, inventory, and customer order requests.</p></div>
+
+<section id="setup" class="panel">
+<h2>Connect this page to Supabase</h2>
+<p>Enter your Supabase Project URL and Publishable key. These are saved only in this browser on this device. Never enter a secret or service_role key here.</p>
+<div class="grid">
+<div class="full"><label for="projectUrl">Project URL</label><input id="projectUrl" placeholder="https://your-project.supabase.co" autocomplete="url"></div>
+<div class="full"><label for="publishableKey">Publishable key</label><input id="publishableKey" placeholder="sb_publishable_..." autocomplete="off"></div>
+</div>
+<div class="row" style="margin-top:14px"><button id="saveConfig">Save connection on this device</button><span class="status" id="configStatus"></span></div>
+</section>
+
+<section id="loginPanel" class="panel hidden">
+<h2>Admin login</h2><p>Sign in with your authorized DW STORE admin account.</p>
+<div class="grid">
+<div><label for="email">Email</label><input id="email" type="email" autocomplete="username"></div>
+<div><label for="password">Password</label><input id="password" type="password" autocomplete="current-password"></div>
+</div>
+<div class="row" style="margin-top:14px"><button id="loginBtn">Sign in</button><span id="loginStatus" class="status"></span></div>
+</section>
+
+<section id="appPanel" class="hidden">
+<div class="panel">
+<div class="row"><div><h2 style="margin:0">DW STORE admin</h2><p style="margin:4px 0">Signed in as the authorized administrator.</p></div>
+<div class="actions"><button id="refreshBtn" class="secondary">Refresh all</button><button id="logoutBtn" class="secondary">Sign out</button></div></div>
+<div id="appStatus" class="status" style="margin-top:10px"></div>
+</div>
+
+<section class="panel">
+<div class="row"><div><h2 style="margin:0">Order Requests</h2><p style="margin:4px 0">Review orders and update their status after checking payment and fulfilment.</p></div><span id="orderCount" class="pill">0 orders</span></div>
+<div id="ordersStatus" class="status" style="margin:12px 0"></div>
+<div id="ordersList"><p>No orders loaded yet.</p></div>
+</section>
+
+<section class="panel">
+<h2 id="formTitle">Add a product</h2>
+<form id="productForm"><input id="productId" type="hidden">
+<div class="grid">
+<div><label for="name">Product name *</label><input id="name" required maxlength="120"></div>
+<div><label for="category">Category *</label><input id="category" value="Fruit" required maxlength="60"></div>
+<div><label for="price">Price (INR) *</label><input id="price" type="number" min="0" step="0.01" required></div>
+<div><label for="stock">Stock quantity *</label><input id="stock" type="number" min="0" step="1" required></div>
+<div class="full"><label for="description">Description</label><textarea id="description" maxlength="1000"></textarea></div>
+<div class="full"><label for="imageUrl">Image URL (optional)</label><input id="imageUrl" type="url" placeholder="https://..."></div>
+<div><label for="active">Visibility</label><select id="active"><option value="true">Active — visible in catalog</option><option value="false">Inactive — hidden</option></select></div>
+</div>
+<div class="row" style="margin-top:14px"><div class="actions"><button type="submit" id="saveProduct">Save product</button><button type="button" id="cancelEdit" class="secondary hidden">Cancel edit</button></div><span id="formStatus" class="status"></span></div>
+</form>
+</section>
+
+<section class="panel">
+<div class="row"><h2 style="margin:0">Current products</h2><span id="count" class="pill">0 products</span></div>
+<div id="productsList" style="margin-top:12px"><p>No products loaded yet.</p></div>
+</section>
+</section>
+<p style="font-size:12px;text-align:center">DW STORE admin • Payments are manually verified • Not affiliated with Roblox or Blox Fruits.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const ADMIN_USER_ID='ef884494-023f-494f-866a-d4fb2d839942';
+const ORDER_STATUSES=['awaiting_payment','payment_submitted','paid','fulfilled','cancelled'];
+let client=null,products=[],orders=[];
+const cfgKey='dw_store_supabase_config_v1';
+
+function status(id,msg,kind=''){const el=$(id);el.textContent=msg;el.className='status '+kind}
+function show(id,yes=true){$(id).classList.toggle('hidden',!yes)}
+function getConfig(){try{return JSON.parse(localStorage.getItem(cfgKey)||'null')}catch{return null}}
+function validUrl(v){try{const u=new URL(v);return u.protocol==='https:'&&u.hostname.endsWith('.supabase.co')}catch{return false}}
+function initClient(url,key){if(!window.supabase?.createClient)throw new Error('Could not load Supabase client. Check internet and reload.');client=window.supabase.createClient(url,key)}
+function isAdmin(user){return user?.id===ADMIN_USER_ID}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function money(v){const n=Number(v);return Number.isFinite(n)?'₹'+n.toFixed(2):'—'}
+
+function configure(){
+ const c=getConfig();
+ if(c?.url&&c?.key){
+  $('projectUrl').value=c.url;$('publishableKey').value=c.key;
+  try{initClient(c.url,c.key);show('loginPanel',true);status('configStatus','Connection details loaded on this device.','good');checkSession()}
+  catch(e){status('configStatus',e.message,'bad')}
+ }else{show('loginPanel',false);show('appPanel',false)}
+}
+$('saveConfig').addEventListener('click',()=>{
+ const url=$('projectUrl').value.trim(),key=$('publishableKey').value.trim();
+ if(!validUrl(url)||!key||key.startsWith('sb_secret_')||key.includes('service_role')){
+  status('configStatus','Enter a valid HTTPS Supabase Project URL and publishable/anon key. Never use a secret/service_role key.','bad');return;
+ }
+ localStorage.setItem(cfgKey,JSON.stringify({url,key}));
+ try{initClient(url,key);show('loginPanel',true);show('appPanel',false);status('configStatus','Saved in this browser. Sign in below.','good')}
+ catch(e){status('configStatus',e.message,'bad')}
+});
+
+async function enterDashboard(user){
+ if(!isAdmin(user)){
+  await client.auth.signOut();
+  show('appPanel',false);show('loginPanel',true);
+  status('loginStatus','Access denied. This account is not the authorized DW STORE admin.','bad');
+  return;
+ }
+ show('loginPanel',false);show('appPanel',true);
+ await Promise.all([loadProducts(),loadOrders()]);
+}
+async function checkSession(){
+ if(!client)return;
+ const{data,error}=await client.auth.getSession();
+ if(error)status('loginStatus',error.message,'bad');
+ if(data.session)await enterDashboard(data.session.user);
+}
+$('loginBtn').addEventListener('click',async()=>{
+ if(!client){status('loginStatus','Save the Supabase connection details first.','bad');return}
+ status('loginStatus','Signing in…');
+ const{data,error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+ if(error){status('loginStatus',error.message,'bad');return}
+ $('password').value='';
+ await enterDashboard(data.user);
+});
+$('logoutBtn').addEventListener('click',async()=>{
+ if(client)await client.auth.signOut();
+ show('appPanel',false);show('loginPanel',true);status('loginStatus','Signed out.');
+});
+$('refreshBtn').addEventListener('click',async()=>{await Promise.all([loadProducts(),loadOrders()])});
+
+async function loadProducts(){
+ if(!client)return;
+ status('appStatus','Loading products…');
+ const{data,error}=await client.from('products').select('*').order('created_at',{ascending:false});
+ if(error){status('appStatus','Could not load products: '+error.message,'bad');return}
+ products=data||[];renderProducts();status('appStatus','Inventory loaded.','good');
+}
+async function loadOrders(){
+ if(!client)return;
+ status('ordersStatus','Loading customer orders…');
+ const{data,error}=await client.from('orders').select('*').order('created_at',{ascending:false});
+ if(error){
+  orders=[];renderOrders();
+  status('ordersStatus','Could not load orders: '+error.message+'. Check that the admin SELECT policy is enabled for this account.','bad');return;
+ }
+ orders=data||[];renderOrders();
+ status('ordersStatus','Orders loaded. Payment references must be checked manually before marking an order paid.','good');
+}
+function dateText(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleString()}
+function itemText(item){
+ if(!item||typeof item!=='object')return '<li>'+esc(String(item))+'</li>';
+ const name=item.name||item.product_name||item.product_id||'Product';
+ const qty=item.quantity??1;
+ const total=item.line_total!=null?' · '+money(item.line_total):'';
+ return '<li>'+esc(name)+' × '+esc(qty)+esc(total)+'</li>';
+}
+function renderOrders(){
+ $('orderCount').textContent=orders.length+' order'+(orders.length===1?'':'s');
+ if(!orders.length){$('ordersList').innerHTML='<p>No customer orders found.</p>';return}
+ $('ordersList').innerHTML=orders.map(o=>{
+  const items=Array.isArray(o.items)?o.items:[];
+  const statusName=ORDER_STATUSES.includes(o.status)?o.status:'unknown';
+  const options=ORDER_STATUSES.map(s=>'<option value="'+s+'" '+(o.status===s?'selected':'')+'>'+s.replaceAll('_',' ')+'</option>').join('');
+  const itemHtml=items.length?items.map(itemText).join(''):'<li>Item details unavailable</li>';
+  return `<article class="order">
+   <div class="row"><div class="order-meta"><strong>Order #${esc(String(o.id).slice(0,8))}</strong><span class="pill status-${esc(statusName)}">${esc(o.status||'unknown')}</span></div><small>${esc(dateText(o.created_at))}</small></div>
+   <div class="order-details">
+    <div class="detail"><small>Roblox username</small><strong>${esc(o.roblox_username||'—')}</strong></div>
+    <div class="detail"><small>Customer account ID</small><strong>${esc(o.customer_id||'—')}</strong></div>
+    <div class="detail"><small>Order total</small><strong>${esc(money(o.total_amount))}</strong></div>
+    <div class="detail"><small>Payment reference</small><strong>${esc(o.payment_reference||'Not submitted')}</strong></div>
+   </div>
+   <strong>Items</strong><ul class="item-list">${itemHtml}</ul>
+   <div class="order-controls"><label>Update order status<select data-order-status="${esc(o.id)}">${options}</select></label><button data-save-order="${esc(o.id)}">Save status</button></div>
+  </article>`;
+ }).join('');
+ $('ordersList').querySelectorAll('[data-save-order]').forEach(b=>b.addEventListener('click',()=>updateOrderStatus(b.dataset.saveOrder)));
+}
+async function updateOrderStatus(id){
+ const order=orders.find(o=>String(o.id)===String(id));if(!order)return;
+ const select=$('ordersList').querySelector(`[data-order-status="${CSS.escape(String(id))}"]`);
+ const next=select?.value;
+ if(!ORDER_STATUSES.includes(next)){status('ordersStatus','Invalid order status.','bad');return}
+ if(next==='paid'&&!confirm('Have you personally verified this payment in your FamApp/bank account? Only mark it paid after confirming the payment.'))return;
+ if(next==='fulfilled'&&!confirm('Confirm that this order has been delivered to the customer?'))return;
+ if(next==='cancelled'&&!confirm('Are you sure you want to cancel this order?'))return;
+ status('ordersStatus','Updating order…');
+ const{error}=await client.from('orders').update({status:next}).eq('id',id);
+ if(error){status('ordersStatus','Could not update order: '+error.message,'bad');return}
+ status('ordersStatus','Order status updated.','good');await loadOrders();
+}
+
+function renderProducts(){
+ $('count').textContent=products.length+' product'+(products.length===1?'':'s');
+ if(!products.length){$('productsList').innerHTML='<p>No products yet. Add your first product above.</p>';return}
+ $('productsList').innerHTML=products.map(p=>`<div class="product"><div><strong>${esc(p.name)}</strong> <span class="pill">${esc(p.category)}</span> <span class="pill">${p.active?'Active':'Inactive'}</span><br><small>Price: INR ${Number(p.price).toFixed(2)} · Stock: ${Number(p.stock)}${p.description?' · '+esc(p.description):''}</small></div><div class="actions"><button class="secondary" data-edit="${esc(p.id)}">Edit</button><button class="danger" data-delete="${esc(p.id)}">Delete</button></div></div>`).join('');
+ $('productsList').querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>editProduct(b.dataset.edit)));
+ $('productsList').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>deleteProduct(b.dataset.delete)));
+}
+function editProduct(id){
+ const p=products.find(x=>x.id===id);if(!p)return;
+ $('productId').value=p.id;$('name').value=p.name||'';$('category').value=p.category||'Fruit';$('price').value=p.price;$('stock').value=p.stock;$('description').value=p.description||'';$('imageUrl').value=p.image_url||'';$('active').value=String(!!p.active);
+ $('formTitle').textContent='Edit product';$('saveProduct').textContent='Update product';show('cancelEdit',true);$('productForm').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function resetForm(){
+ $('productForm').reset();$('productId').value='';$('category').value='Fruit';$('active').value='true';$('formTitle').textContent='Add a product';$('saveProduct').textContent='Save product';show('cancelEdit',false);status('formStatus','');
+}
+$('cancelEdit').addEventListener('click',resetForm);
+$('productForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!client)return;
+ const id=$('productId').value;
+ const payload={name:$('name').value.trim(),category:$('category').value.trim(),price:Number($('price').value),stock:Number($('stock').value),description:$('description').value.trim(),image_url:$('imageUrl').value.trim(),active:$('active').value==='true'};
+ if(!payload.name||!payload.category||!Number.isFinite(payload.price)||payload.price<0||!Number.isInteger(payload.stock)||payload.stock<0){status('formStatus','Check product name, category, price, and whole-number stock.','bad');return}
+ status('formStatus','Saving…');
+ const result=id?await client.from('products').update(payload).eq('id',id):await client.from('products').insert(payload);
+ if(result.error){status('formStatus','Save failed: '+result.error.message,'bad');return}
+ status('formStatus',id?'Product updated.':'Product added.','good');resetForm();await loadProducts();
+});
+async function deleteProduct(id){
+ const p=products.find(x=>x.id===id);if(!p||!confirm(`Delete "${p.name}"? This cannot be undone.`))return;
+ status('appStatus','Deleting product…');
+ const{error}=await client.from('products').delete().eq('id',id);
+ if(error){status('appStatus','Delete failed: '+error.message,'bad');return}
+ status('appStatus','Product deleted.','good');await loadProducts();
+}
+configure();
+})();
 </script></body></html>
